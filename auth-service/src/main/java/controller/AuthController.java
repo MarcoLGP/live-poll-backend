@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import service.AuthService;
 import service.RefreshTokenService;
 
@@ -21,6 +22,14 @@ public class AuthController {
 
     @Inject
     RefreshTokenService refreshTokenService;
+
+    @Inject
+    @ConfigProperty(name = "quarkus.profile")
+    String profile;
+
+    @Inject
+    @ConfigProperty(name = "cookie.secure")
+    boolean cookieSecure;
 
     @POST
     @Path("/register")
@@ -60,14 +69,7 @@ public class AuthController {
         if (refreshTokenCookie != null) {
             refreshTokenService.revokeToken(refreshTokenCookie);
         }
-        NewCookie deleteCookie = new NewCookie.Builder("refreshToken")
-                .value("")
-                .path("/")
-                .maxAge(0)
-                .httpOnly(true)
-                .secure(true)
-                .sameSite(NewCookie.SameSite.STRICT)
-                .build();
+        NewCookie deleteCookie = createRefreshTokenCookie(null);
         return Response.ok().cookie(deleteCookie).build();
     }
 
@@ -91,13 +93,21 @@ public class AuthController {
     }
 
     private NewCookie createRefreshTokenCookie(String refreshToken) {
-        return new NewCookie.Builder("refreshToken")
-                .value(refreshToken)
+        boolean secure = cookieSecure;
+
+        NewCookie.Builder builder = new NewCookie.Builder("refreshToken")
                 .path("/")
-                .maxAge(7 * 24 * 60 * 60) // 7 dias em segundos
                 .httpOnly(true)
-                .secure(true)   // obrigatório em produção com HTTPS
-                .sameSite(NewCookie.SameSite.STRICT)
-                .build();
+                .secure(secure);
+
+        if (refreshToken != null && !refreshToken.isEmpty()) {
+            builder.value(refreshToken)
+                    .maxAge(7 * 24 * 60 * 60);
+        } else {
+            builder.value("")
+                    .maxAge(0);
+        }
+
+        return builder.build();
     }
 }

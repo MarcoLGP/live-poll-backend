@@ -1,6 +1,5 @@
 package entities;
 
-import entities.enums.PollStatus;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -32,10 +31,6 @@ public class Poll extends PanacheEntityBase {
     @Column(name = "end_date", nullable = false)
     public LocalDateTime endDate;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    public PollStatus status;
-
     @Column(name = "created_at", nullable = false)
     public LocalDateTime createdAt;
 
@@ -49,9 +44,6 @@ public class Poll extends PanacheEntityBase {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (status == null) {
-            status = PollStatus.DRAFT;
-        }
     }
 
     @PreUpdate
