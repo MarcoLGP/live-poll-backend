@@ -5,12 +5,15 @@ import dto.LoginDTO;
 import dto.RegisterDTO;
 import entities.User;
 import entities.RefreshToken;
+import event.UserEvent;
 import io.smallrye.jwt.build.Jwt;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.mindrot.jbcrypt.BCrypt;
 import java.time.Duration;
 import java.util.Set;
@@ -20,6 +23,10 @@ public class AuthService {
 
     @Inject
     RefreshTokenService refreshTokenService;
+
+    @Inject
+    @Channel("user-events")
+    Emitter<UserEvent> userEventEmitter;
 
     @Transactional
     public AuthResponseDTO register(RegisterDTO dto) {
@@ -35,7 +42,7 @@ public class AuthService {
         user.persist();
 
         // Gerar tokens
-        String accessToken = generateAccessToken(user);
+        String accessToken = generateAccessToken(user.id.toString());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
         return new AuthResponseDTO(accessToken, refreshToken.originalToken);
@@ -52,19 +59,17 @@ public class AuthService {
             throw new BadRequestException("Invalid password");
         }
 
-        String accessToken = generateAccessToken(user);
+        String accessToken = generateAccessToken(user.id.toString());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
         return new AuthResponseDTO(accessToken, refreshToken.originalToken);
     }
 
-    public String generateAccessToken(User user) {
+    public String generateAccessToken(String userId) {
         return Jwt.issuer("livepoll-auth")
-                .subject(user.id.toString())
+                .subject(userId)
                 .groups(Set.of("user"))
-                .expiresIn(Duration.ofMinutes(15)) // ⏱️ curta duração
-                .claim("username", user.username)
-                .claim("email", user.email)
+                .expiresIn(Duration.ofMinutes(15))
                 .sign();
     }
 }

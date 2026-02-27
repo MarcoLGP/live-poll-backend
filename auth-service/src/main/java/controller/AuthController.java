@@ -23,14 +23,6 @@ public class AuthController {
     @Inject
     RefreshTokenService refreshTokenService;
 
-    @Inject
-    @ConfigProperty(name = "quarkus.profile")
-    String profile;
-
-    @Inject
-    @ConfigProperty(name = "cookie.secure")
-    boolean cookieSecure;
-
     @POST
     @Path("/register")
     public Response register(@Valid RegisterDTO dto) {
@@ -54,7 +46,7 @@ public class AuthController {
         }
 
         RefreshToken newRefreshToken = refreshTokenService.verifyAndRotate(refreshTokenCookie);
-        String newAccessToken = authService.generateAccessToken(newRefreshToken.user);
+        String newAccessToken = authService.generateAccessToken(newRefreshToken.user.id.toString());
 
         NewCookie cookie = createRefreshTokenCookie(newRefreshToken.originalToken);
 
@@ -73,18 +65,6 @@ public class AuthController {
         return Response.ok().cookie(deleteCookie).build();
     }
 
-    @GET
-    @Path("/me")
-    @Authenticated
-    public Response me(@Context SecurityContext ctx) {
-        String userId = ctx.getUserPrincipal().getName();
-        User user = User.findById(Long.parseLong(userId));
-        if (user == null) {
-            throw new NotFoundException("User not found");
-        }
-        return Response.ok(new UserDTO(user.id, user.username, user.email)).build();
-    }
-
     private Response buildTokenResponse(AuthResponseDTO authResponse) {
         NewCookie cookie = createRefreshTokenCookie(authResponse.refreshToken());
         return Response.ok(new AccessTokenResponseDTO(authResponse.accessToken()))
@@ -93,21 +73,17 @@ public class AuthController {
     }
 
     private NewCookie createRefreshTokenCookie(String refreshToken) {
-        boolean secure = cookieSecure;
-
         NewCookie.Builder builder = new NewCookie.Builder("refreshToken")
+                .value(refreshToken)
                 .path("/")
-                .httpOnly(true)
-                .secure(secure);
+                .maxAge(7 * 24 * 60 * 60)
+                .httpOnly(true);
 
-        if (refreshToken != null && !refreshToken.isEmpty()) {
-            builder.value(refreshToken)
-                    .maxAge(7 * 24 * 60 * 60);
+        if (io.quarkus.runtime.LaunchMode.current().isDevOrTest()) {
+            builder.secure(false).sameSite(NewCookie.SameSite.LAX);
         } else {
-            builder.value("")
-                    .maxAge(0);
+            builder.secure(true).sameSite(NewCookie.SameSite.NONE);
         }
-
         return builder.build();
     }
 }

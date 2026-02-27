@@ -45,6 +45,8 @@
         <module>vote-service</module>
         <module>realtime-service</module>
         <module>auth-service</module>
+        <module>user-service</module>
+        <module>common</module>
     </modules>
 
 </project>
