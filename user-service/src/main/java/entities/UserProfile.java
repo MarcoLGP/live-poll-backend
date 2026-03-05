@@ -7,22 +7,19 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "user_profile")
 @RegisterForReflection
-public class User extends PanacheEntityBase {
+public class UserProfile extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(unique = true, nullable = false, length = 50)
+    @Column(unique = true, nullable = false)
     public String username;
 
     @Column(unique = true, nullable = false)
     public String email;
-
-    @Column(nullable = false)
-    public String password;
 
     @Column(name = "created_at", nullable = false)
     public LocalDateTime createdAt;
