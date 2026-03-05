@@ -1,14 +1,14 @@
 package controller;
 
-import dto.*;
+import dto.AccessTokenResponseDTO;
+import dto.AuthResponseDTO;
+import dto.LoginDTO;
+import dto.RegisterDTO;
 import entities.RefreshToken;
-import entities.User;
-import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import service.AuthService;
 import service.RefreshTokenService;
 
@@ -18,17 +18,23 @@ import service.RefreshTokenService;
 public class AuthController {
 
     @Inject
-    AuthService authService;
+    private AuthService authService;
 
     @Inject
-    RefreshTokenService refreshTokenService;
+    private RefreshTokenService refreshTokenService;
 
     @POST
     @Path("/register")
     public Response register(@Valid RegisterDTO dto) {
         System.out.println("register");
-        AuthResponseDTO authResponse = authService.register(dto);
-        return buildTokenResponse(authResponse);
+        try {
+            AuthResponseDTO authResponse = authService.register(dto);
+            return buildTokenResponse(authResponse);
+        }
+        catch (Exception e) {
+            System.err.println(e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @POST
@@ -46,7 +52,7 @@ public class AuthController {
         }
 
         RefreshToken newRefreshToken = refreshTokenService.verifyAndRotate(refreshTokenCookie);
-        String newAccessToken = authService.generateAccessToken(newRefreshToken.user.id.toString());
+        String newAccessToken = authService.generateAccessToken(newRefreshToken.credential.userProfileId.toString());
 
         NewCookie cookie = createRefreshTokenCookie(newRefreshToken.originalToken);
 

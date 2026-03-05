@@ -1,7 +1,7 @@
 package service;
 
+import entities.Credential;
 import entities.RefreshToken;
-import entities.User;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
@@ -17,14 +17,14 @@ public class RefreshTokenService {
     private static final long REFRESH_TOKEN_VALIDITY_DAYS = 7;
 
     @Transactional
-    public RefreshToken createRefreshToken(User user) {
-        RefreshToken.update("revoked = true where user = ?1 and revoked = false", user);
+    public RefreshToken createRefreshToken(Credential credential) {
+        RefreshToken.update("revoked = true where credential = ?1 and revoked = false", credential);
 
         String token = UUID.randomUUID().toString();
         String tokenHash = hashToken(token);
 
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.user = user;
+        refreshToken.credential = credential;
         refreshToken.tokenHash = tokenHash;
         refreshToken.expiresAt = LocalDateTime.now().plusDays(REFRESH_TOKEN_VALIDITY_DAYS);
         refreshToken.revoked = false;
@@ -38,7 +38,7 @@ public class RefreshTokenService {
     public RefreshToken verifyAndRotate(String token) {
         String tokenHash = hashToken(token);
         RefreshToken oldToken = RefreshToken.find(
-                "select rt from RefreshToken rt join fetch rt.user where rt.tokenHash = ?1 and rt.revoked = false and rt.expiresAt > ?2",
+                "select rt from RefreshToken rt join fetch rt.credential where rt.tokenHash = ?1 and rt.revoked = false and rt.expiresAt > ?2",
                 tokenHash, LocalDateTime.now()
         ).firstResult();
 
@@ -50,7 +50,7 @@ public class RefreshTokenService {
         String newTokenHash = hashToken(newToken);
 
         RefreshToken newRefreshToken = new RefreshToken();
-        newRefreshToken.user = oldToken.user;
+        newRefreshToken.credential = oldToken.credential;
         newRefreshToken.tokenHash = newTokenHash;
         newRefreshToken.expiresAt = LocalDateTime.now().plusDays(REFRESH_TOKEN_VALIDITY_DAYS);
         newRefreshToken.revoked = false;

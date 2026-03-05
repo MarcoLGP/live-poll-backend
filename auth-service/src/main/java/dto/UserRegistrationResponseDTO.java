@@ -1,4 +1,11 @@
 package dto;
 
-public record UserRegistrationResponseDTO() {
-}
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
+public record UserRegistrationResponseDTO(
+        String correlationId,
+        Long userId,
+        boolean success,
+        String errorMessage
+) {}

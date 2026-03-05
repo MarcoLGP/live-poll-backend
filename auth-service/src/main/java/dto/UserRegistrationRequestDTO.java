@@ -1,4 +1,10 @@
 package dto;
 
-public record UserRegistrationRequestDTO() {
-}
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
+public record UserRegistrationRequestDTO(
+        String correlationId,
+        String email,
+        String username
+) {}

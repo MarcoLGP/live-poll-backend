@@ -1,37 +1,24 @@
 package entities;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+
 @Entity
 @Table(name = "refresh_token")
-public class RefreshToken extends PanacheEntityBase {
+public class RefreshToken extends PanacheEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    @ManyToOne
+    @JoinColumn(name = "credential_id", nullable = false)
+    public Credential credential;
 
-    @Column(name = "token_hash", nullable = false, unique = true)
-    public String tokenHash; // SHA-256 do token original
+    @Column(unique = true, nullable = false)
+    public String tokenHash;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    public User user;
-
-    @Column(name = "expires_at", nullable = false)
     public LocalDateTime expiresAt;
 
-    @Column(name = "created_at", nullable = false)
-    public LocalDateTime createdAt;
-
-    @Column(nullable = false)
-    public boolean revoked = false;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    public boolean revoked;
 
     @Transient
     public String originalToken;
