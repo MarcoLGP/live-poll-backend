@@ -6,5 +6,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public record UserRegistrationRequestDTO(
         String correlationId,
         String email,
-        String username
+        String username,
+        String language,
+        String gradientAvatar,
+        String avatarUrl
 ) {}

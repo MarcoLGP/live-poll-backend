@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!--[if !mso]><!-->
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <!--<![endif]-->
+  <title>Confirme seu e-mail — LivePoll</title>
+  <style>
+    /* Declara que o template já suporta dark mode nativamente,
+       impedindo que clientes como Gmail/Apple Mail auto-invertam as cores */
+    :root { color-scheme: light dark; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #07090f !important;
+      color-scheme: light dark;
+    }
+
+    /* Força as cores no dark mode para clientes que sobrescrevem
+       (Gmail Android, Apple Mail, Samsung Mail) */
+    @media (prefers-color-scheme: dark) {
+      body, .email-bg { background-color: #07090f !important; }
+      .card-bg        { background-color: #0e1018 !important; border-color: rgba(255,255,255,0.07) !important; }
+      .text-main      { color: #f0f0f5 !important; }
+      .text-sub       { color: #8892b0 !important; }
+      .text-muted     { color: #64748b !important; }
+      .text-name      { color: #ccd6f6 !important; }
+      .text-footer    { color: #3d4460 !important; }
+      .url-box        { background-color: rgba(255,255,255,0.04) !important; border-color: rgba(255,255,255,0.06) !important; }
+      .url-link       { color: #7C6FF7 !important; }
+      .divider        { background-color: rgba(255,255,255,0.06) !important; }
+      .logo-text-main { color: #f0f0f5 !important; }
+    }
+
+    /* Garante que clientes que forçam fundo branco em light mode
+       não quebrem a leitura */
+    @media (prefers-color-scheme: light) {
+      body, .email-bg { background-color: #07090f !important; }
+      .card-bg        { background-color: #0e1018 !important; }
+      .text-main      { color: #f0f0f5 !important; }
+      .text-sub       { color: #8892b0 !important; }
+      .text-name      { color: #ccd6f6 !important; }
+    }
+  </style>
+</head>
+<body class="email-bg" style="margin:0;padding:0;background-color:#07090f;font-family:'Outfit',Arial,sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" class="email-bg" style="background-color:#07090f;min-height:100vh;">
+  <tr>
+    <td align="center" style="padding:48px 16px;">
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
+
+        <!-- ── Logo inline (SVG + texto) ── -->
+        <tr>
+          <td align="center" style="padding-bottom:32px;">
+            <table cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <!-- SVG Mark -->
+                <td valign="middle" style="padding-right:10px;">
+                  <!--[if !mso]><!-->
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+                    <defs>
+                      <linearGradient id="lg1c" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#7C6FF7"/>
+                        <stop offset="100%" stop-color="#A78BFA"/>
+                      </linearGradient>
+                      <linearGradient id="lg2c" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#F59E0B"/>
+                        <stop offset="100%" stop-color="#F59E0B" stop-opacity="0.6"/>
+                      </linearGradient>
+                    </defs>
+                    <circle cx="18" cy="18" r="16" stroke="url(#lg1c)" stroke-width="2" fill="none" stroke-dasharray="4 2" opacity="0.5"/>
+                    <rect x="10" y="22" width="5" height="7" rx="2" fill="url(#lg1c)"/>
+                    <rect x="17" y="16" width="5" height="13" rx="2" fill="url(#lg1c)" opacity="0.8"/>
+                    <rect x="24" y="12" width="2" height="17" rx="1" fill="url(#lg2c)"/>
+                    <circle cx="25" cy="10" r="3" fill="url(#lg2c)"/>
+                    <circle cx="25" cy="10" r="1.5" fill="white" opacity="0.8"/>
+                  </svg>
+                  <!--<![endif]-->
+                  <!--[if mso]><table><tr><td width="36" height="36" style="background:#7C6FF7;border-radius:4px;"></td></tr></table><![endif]-->
+                </td>
+                <!-- Wordmark -->
+                <td valign="middle">
+                  <span style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:700;letter-spacing:-0.5px;color:#f0f0f5;" class="logo-text-main">LivePoll<span style="color:#F59E0B;">!</span></span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- ── Card ── -->
+        <tr>
+          <td class="card-bg" style="background-color:#0e1018;border:1px solid rgba(255,255,255,0.07);border-radius:20px;padding:48px 40px;">
+
+            <!-- Linha decorativa topo -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="height:2px;background:linear-gradient(90deg,transparent,#7C6FF7,#A78BFA,transparent);border-radius:2px;">&nbsp;</td>
+              </tr>
+            </table>
+
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:32px;">
+
+              <!-- Ícone -->
+              <tr>
+                <td align="center" style="padding-bottom:24px;">
+                  <table cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="width:64px;height:64px;background:rgba(124,111,247,0.12);border:1px solid rgba(124,111,247,0.25);border-radius:50%;text-align:center;vertical-align:middle;">
+                        <span style="font-size:28px;line-height:64px;">✉️</span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Título -->
+              <tr>
+                <td align="center" style="padding-bottom:12px;">
+                  <h1 class="text-main" style="margin:0;font-size:26px;font-weight:600;color:#f0f0f5;line-height:1.3;letter-spacing:-0.01em;">
+                    Confirme seu e-mail
+                  </h1>
+                </td>
+              </tr>
+
+              <!-- Subtítulo -->
+              <tr>
+                <td align="center" style="padding-bottom:32px;">
+                  <p class="text-sub" style="margin:0;font-size:15px;color:#8892b0;line-height:1.6;max-width:380px;">
+                    Olá, <strong class="text-name" style="color:#ccd6f6;">{username}</strong>! Para ativar sua conta no LivePoll, confirme seu endereço de e-mail clicando no botão abaixo.
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Botão CTA -->
+              <tr>
+                <td align="center" style="padding-bottom:32px;">
+                  <table cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="background:linear-gradient(135deg,#7C6FF7,#A78BFA);border-radius:12px;box-shadow:0 8px 24px rgba(124,111,247,0.35);">
+                        <a href="{confirmationUrl}" target="_blank"
+                           style="display:inline-block;padding:14px 36px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.02em;white-space:nowrap;">
+                          ✦ Confirmar e-mail
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Divider -->
+              <tr>
+                <td style="padding-bottom:24px;">
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td class="divider" style="height:1px;background-color:rgba(255,255,255,0.06);">&nbsp;</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Link alternativo -->
+              <tr>
+                <td align="center" style="padding-bottom:8px;">
+                  <p class="text-muted" style="margin:0;font-size:13px;color:#64748b;line-height:1.5;">
+                    Se o botão não funcionar, copie e cole o link abaixo:
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding-bottom:28px;">
+                  <table cellpadding="0" cellspacing="0" border="0" class="url-box" style="max-width:440px;width:100%;background-color:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:8px;">
+                    <tr>
+                      <td style="padding:10px 14px;">
+                        <a href="{confirmationUrl}" class="url-link" style="font-size:12px;color:#7C6FF7;word-break:break-all;text-decoration:none;">{confirmationUrl}</a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Aviso expiração -->
+              <tr>
+                <td align="center">
+                  <table cellpadding="0" cellspacing="0" border="0" style="max-width:400px;">
+                    <tr>
+                      <td style="background-color:rgba(245,179,66,0.08);border:1px solid rgba(245,179,66,0.2);border-radius:10px;padding:12px 16px;">
+                        <p style="margin:0;font-size:12px;color:#f5b342;text-align:center;line-height:1.5;">
+                          ⚠️ Este link expira em <strong>24 horas</strong>. Se não foi você, ignore este e-mail.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding-top:28px;">
+            <p class="text-footer" style="margin:0 0 6px 0;font-size:12px;color:#3d4460;line-height:1.5;">
+              Você está recebendo este e-mail porque criou uma conta no LivePoll.
+            </p>
+            <p class="text-footer" style="margin:0;font-size:12px;color:#3d4460;">
+              © 2025 LivePoll — Plataforma de votação em tempo real
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

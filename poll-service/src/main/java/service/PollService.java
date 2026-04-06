@@ -1,58 +1,68 @@
 package service;
 
-import dto.PollCreateDTO;
-import dto.PollResponseDTO;
+import dto.*;
 import entities.Poll;
-import entities.PollOption;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
-import java.util.List;
-import java.util.stream.Collectors;
+import messaging.PollEventProducer;
 
-@ApplicationScoped
+@RequestScoped
 public class PollService {
 
-    public List<PollResponseDTO> listAll() {
-        return Poll.listAll().stream()
-                .map(p -> PollResponseDTO.fromEntity((Poll) p))
-                .collect(Collectors.toList());
-    }
+    @Inject
+    PollEventProducer pollEventProducer;
 
-    public PollResponseDTO findById(Long id) {
-        Poll poll = Poll.findById(id);
-        if (poll == null) {
-            throw new NotFoundException("Poll not found with id: " + id);
-        }
+    @Transactional
+    public PollResponseDTO create(PollCreateDTO dto) {
+        Poll poll        = new Poll();
+        poll.title       = dto.title();
+        poll.category    = dto.category();
+        poll.authorId     = dto.userId();
+        poll.active      = true;
+        poll.addOptionsFromDTOs(dto.options());
+        poll.persist();
+
+        pollEventProducer.sendPollCreated(new PollCreatedEventDTO(
+                poll.id, poll.title, poll.category,
+                poll.authorId, dto.userName(), dto.userGradient(), dto.userAvatarUrl(),
+                poll.createdAt, poll.endDate, poll.active,
+                poll.options.stream()
+                        .map(o -> new PollCreatedEventDTO.PollOptionDTO(o.id, o.text, o.displayOrder))
+                        .toList()
+        ));
+
         return PollResponseDTO.fromEntity(poll);
     }
 
     @Transactional
-    public PollResponseDTO create(PollCreateDTO dto) {
-        Poll poll = new Poll();
-        poll.title = dto.title();
-        poll.description = dto.description();
-        poll.startDate = dto.startDate();
-        poll.endDate = dto.endDate();
+    public void update(Long id, PollUpdatedEventDTO dto) {
+        Poll poll = Poll.findById(id);
+        if (poll == null) throw new NotFoundException("Poll not found: " + id);
 
-        List<PollOption> options = dto.options().stream()
-                .map(optDto -> {
-                    PollOption option = new PollOption();
-                    option.text = optDto.text();
-                    option.displayOrder = optDto.displayOrder();
-                    option.poll = poll;
-                    return option;
-                })
-                .toList();
+        boolean wasActive = poll.active;
 
-        poll.options.addAll(options);
-        poll.persist();
+        if (dto.title()    != null) poll.title    = dto.title();
+        if (dto.category() != null) poll.category = dto.category();
+        if (dto.active()   != null) poll.active   = dto.active();
+        if (dto.endDate()  != null) poll.endDate  = dto.endDate();
 
-        return PollResponseDTO.fromEntity(poll);
+        pollEventProducer.sendPollUpdated(new PollUpdatedEventDTO(
+                poll.id, poll.title, poll.category, poll.endDate, poll.active));
+
+        if (wasActive && Boolean.FALSE.equals(dto.active())) {
+            pollEventProducer.sendPollClosed(
+                    new PollClosedEventDTO(poll.id, poll.title, poll.authorId));
+        }
     }
 
     @Transactional
     public void delete(Long id) {
-        Poll.deleteById(id);
+        Poll poll = Poll.findById(id);
+        if (poll == null) throw new NotFoundException("Poll not found: " + id);
+        poll.delete();
+        pollEventProducer.sendPollDeleted(new PollDeletedEventDTO(id));
     }
 }

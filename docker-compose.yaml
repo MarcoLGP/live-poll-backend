@@ -1,0 +1,264 @@
+version: '3.8'
+
+networks:
+  livepoll-network:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+
+services:
+  stunnel:
+    image: stunnel/stunnel:latest
+    container_name: stunnel
+    restart: unless-stopped
+    volumes:
+      - ./stunnel.conf:/etc/stunnel/stunnel.conf:ro
+      - ./ca.crt:/etc/stunnel/ca.crt:ro
+    ports:
+      - "5672:5672"
+    networks:
+      - livepoll-network
+    healthcheck:
+      test: [ "CMD", "stunnel", "-version" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  # ─────────────────────────────────────────────
+  # CLOUDFLARE TUNNEL
+  # ─────────────────────────────────────────────
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - livepoll-network
+    depends_on:
+      livepoll-web:
+        condition: service_started
+    healthcheck:
+      test: ['CMD', 'cloudflared', 'tunnel', 'ready']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # ─────────────────────────────────────────────
+  # BFF — livepoll-web (porta 9095, única exposta)
+  # ─────────────────────────────────────────────
+  livepoll-web:
+    image: ghcr.io/marcolgp/livepoll/livepoll-web:latest
+    networks:
+      - livepoll-network
+    ports:
+      - "127.0.0.1:9095:9095"
+    environment:
+      - QUARKUS_HTTP_HOST=0.0.0.0
+      - QUARKUS_HTTP_IDLE_TIMEOUT=0
+      - QUARKUS_HTTP_CORS_ACCESS_CONTROL_ALLOW_CREDENTIALS=true
+      - FRONTEND_URL=${FRONTEND_URL}
+      - AUTH_SERVICE_API_MP_REST_URL=http://auth-service:8080
+      - USER_SERVICE_API_MP_REST_URL=http://user-service:8080
+      - POLL_SERVICE_API_MP_REST_URL=http://poll-service:8080
+      - POLL_READ_SERVICE_API_MP_REST_URL=http://poll-read-service:8080
+      - VOTE_SERVICE_API_MP_REST_URL=http://vote-service:8080
+      - NOTIFICATION_SERVICE_API_MP_REST_URL=http://notification-service:8080
+      - QUARKUS_HTTP_CORS_ORIGINS=${FRONTEND_URL}
+      - MP_JWT_VERIFY_PUBLICKEY_LOCATION=publicKey.pem
+      - MP_JWT_VERIFY_ISSUER=livepoll-auth
+      # RabbitMQ
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VIRTUAL_HOST}
+      - RABBITMQ_SSL=${RABBITMQ_SSL}
+      - MP_MESSAGING_CONNECTOR_SMALLRYE_AMQP_SNI_SERVER_NAME=rabbitmq-3khe.onrender.com
+    depends_on:
+      auth-service:
+        condition: service_started
+      vote-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      poll-service:
+        condition: service_started
+      poll-read-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # AUTH-SERVICE
+  # ─────────────────────────────────────────────
+  auth-service:
+    image: ghcr.io/marcolgp/livepoll/auth-service:latest
+    networks:
+      - livepoll-network
+    environment:
+      - QUARKUS_HTTP_HOST=0.0.0.0
+      - QUARKUS_DATASOURCE_JDBC_URL=${AUTH_DB_URL}
+      - QUARKUS_DATASOURCE_USERNAME=${AUTH_DB_USER}
+      - QUARKUS_DATASOURCE_PASSWORD=${AUTH_DB_PASS}
+      - QUARKUS_HTTP_CORS_ORIGINS=http://livepoll-web:9095
+      - QUARKUS_OIDC_CLIENT_GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - QUARKUS_OIDC_CLIENT_GITHUB_CREDENTIALS_SECRET=${GITHUB_CLIENT_SECRET}
+      - QUARKUS_OIDC_CLIENT_GITHUB_REDIRECT_URI=https://api.livepoll.com.br/auth/social/github/callback
+      - QUARKUS_OIDC_CLIENT_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - QUARKUS_OIDC_CLIENT_GOOGLE_CREDENTIALS_SECRET=${GOOGLE_CLIENT_SECRET}
+      - QUARKUS_OIDC_CLIENT_GOOGLE_REDIRECT_URI=https://api.livepoll.com.br/auth/social/google/callback
+        
+      - QUARKUS_MAILER_HOST=smtp.mailersend.net
+      - QUARKUS_MAILER_PORT=587
+      - QUARKUS_MAILER_START_TLS=REQUIRED
+      - QUARKUS_MAILER_SSL=false
+      - QUARKUS_MAILER_AUTH=true
+      - QUARKUS_MAILER_USERNAME=${MAILER_USERNAME}
+      - QUARKUS_MAILER_PASSWORD=${MAILER_PASSWORD}
+      - QUARKUS_MAILER_FROM=${MAILER_FROM}
+      - QUARKUS_MAILER_MOCK=false
+      - QUARKUS_MAILER_AUTH_METHODS=DIGEST-MD5 CRAM-SHA256 CRAM-SHA1 CRAM-MD5 PLAIN LOGIN
+      - QUARKUS_MAILER_LOGIN=REQUIRED
+      
+      - QUARKUS_MAILER_SECONDARY_HOST=smtp.gmail.com
+      - QUARKUS_MAILER_SECONDARY_PORT=587
+      - QUARKUS_MAILER_SECONDARY_START_TLS=REQUIRED
+      - QUARKUS_MAILER_SECONDARY_SSL=false
+      - QUARKUS_MAILER_SECONDARY_AUTH=true
+      - QUARKUS_MAILER_SECONDARY_USERNAME=${MAILER_USERNAME_SECONDARY}
+      - QUARKUS_MAILER_SECONDARY_PASSWORD=${MAILER_PASSWORD_SECONDARY}
+      - QUARKUS_MAILER_SECONDARY_FROM=${MAILER_FROM_SECONDARY}
+      - QUARKUS_MAILER_SECONDARY_MOCK=false
+      - QUARKUS_MAILER_SECONDARY_AUTH_METHODS=DIGEST-MD5 CRAM-SHA256 CRAM-SHA1 CRAM-MD5 PLAIN LOGIN
+      - QUARKUS_MAILER_SECONDARY_LOGIN=REQUIRED
+      
+      - FRONTEND_URL=${FRONTEND_URL}
+      # RabbitMQ
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VIRTUAL_HOST}
+      - RABBITMQ_SSL=${RABBITMQ_SSL}
+      - COOKIE_SECURE=true
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # USER-SERVICE
+  # ─────────────────────────────────────────────
+  user-service:
+    image: ghcr.io/marcolgp/livepoll/user-service:latest
+    networks:
+      - livepoll-network
+    environment:
+      - QUARKUS_HTTP_HOST=0.0.0.0
+      - QUARKUS_DATASOURCE_JDBC_URL=${USER_DB_URL}
+      - QUARKUS_DATASOURCE_USERNAME=${USER_DB_USER}
+      - QUARKUS_DATASOURCE_PASSWORD=${USER_DB_PASS}
+      - MP_JWT_VERIFY_PUBLICKEY_LOCATION=publicKey.pem
+      - MP_JWT_VERIFY_ISSUER=livepoll-auth
+      # RabbitMQ
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VIRTUAL_HOST}
+      - RABBITMQ_SSL=${RABBITMQ_SSL}
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # POLL-SERVICE
+  # ─────────────────────────────────────────────
+  poll-service:
+    image: ghcr.io/marcolgp/livepoll/poll-service:latest
+    networks:
+      - livepoll-network
+    environment:
+      - QUARKUS_HTTP_HOST=0.0.0.0
+      - QUARKUS_DATASOURCE_JDBC_URL=${POLL_DB_URL}
+      - QUARKUS_DATASOURCE_USERNAME=${POLL_DB_USER}
+      - QUARKUS_DATASOURCE_PASSWORD=${POLL_DB_PASS}
+      - MP_JWT_VERIFY_PUBLICKEY_LOCATION=publicKey.pem
+      - MP_JWT_VERIFY_ISSUER=livepoll-auth
+      - QUARKUS_HTTP_CORS_ORIGINS=http://livepoll-web:9095
+      # RabbitMQ
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VIRTUAL_HOST}
+      - RABBITMQ_SSL=${RABBITMQ_SSL}
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # POLL-READ-SERVICE
+  # ─────────────────────────────────────────────
+  poll-read-service:
+    image: ghcr.io/marcolgp/livepoll/poll-read-service:latest
+    networks:
+      - livepoll-network
+    environment:
+      - QUARKUS_HTTP_HOST=0.0.0.0
+      - QUARKUS_DATASOURCE_JDBC_URL=${POLLREAD_DB_URL}
+      - QUARKUS_DATASOURCE_USERNAME=${POLLREAD_DB_USER}
+      - QUARKUS_DATASOURCE_PASSWORD=${POLLREAD_DB_PASS}
+      - MP_JWT_VERIFY_PUBLICKEY_LOCATION=publicKey.pem
+      - MP_JWT_VERIFY_ISSUER=livepoll-auth
+      # RabbitMQ
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VIRTUAL_HOST}
+      - RABBITMQ_SSL=${RABBITMQ_SSL}
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # VOTE-SERVICE
+  # ─────────────────────────────────────────────
+  vote-service:
+    image: ghcr.io/marcolgp/livepoll/vote-service:latest
+    networks:
+      - livepoll-network
+    environment:
+      - QUARKUS_HTTP_HOST=0.0.0.0
+      - QUARKUS_DATASOURCE_JDBC_URL=${VOTE_DB_URL}
+      - QUARKUS_DATASOURCE_USERNAME=${VOTE_DB_USER}
+      - QUARKUS_DATASOURCE_PASSWORD=${VOTE_DB_PASS}
+      - MP_JWT_VERIFY_PUBLICKEY_LOCATION=publicKey.pem
+      - MP_JWT_VERIFY_ISSUER=livepoll-auth
+      - QUARKUS_HTTP_CORS_ORIGINS=http://livepoll-web:9095
+      # RabbitMQ
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VIRTUAL_HOST}
+      - RABBITMQ_SSL=${RABBITMQ_SSL}
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # NOTIFICATION-SERVICE
+  # ─────────────────────────────────────────────
+  notification-service:
+    image: ghcr.io/marcolgp/livepoll/notification-service:latest
+    networks:
+      - livepoll-network
+    environment:
+      - QUARKUS_HTTP_HOST=0.0.0.0
+      - QUARKUS_DATASOURCE_JDBC_URL=${NOTIFICATION_DB_URL}
+      - QUARKUS_DATASOURCE_USERNAME=${NOTIFICATION_DB_USER}
+      - QUARKUS_DATASOURCE_PASSWORD=${NOTIFICATION_DB_PASS}
+      - MP_JWT_VERIFY_PUBLICKEY_LOCATION=publicKey.pem
+      - MP_JWT_VERIFY_ISSUER=livepoll-auth
+      - QUARKUS_HTTP_CORS_ORIGINS=http://livepoll-web:9095
+      # RabbitMQ
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VIRTUAL_HOST}
+      - RABBITMQ_SSL=${RABBITMQ_SSL}
+    restart: unless-stopped

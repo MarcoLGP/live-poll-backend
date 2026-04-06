@@ -6,4 +6,5 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public record AuthResponseDTO(
         String accessToken,
         String refreshToken
-) {}
+) {
+}

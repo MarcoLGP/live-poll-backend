@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @Table(name = "user_profile")
 @RegisterForReflection
 public class UserProfile extends PanacheEntityBase {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
@@ -18,8 +17,17 @@ public class UserProfile extends PanacheEntityBase {
     @Column(unique = true, nullable = false)
     public String username;
 
-    @Column(unique = true, nullable = false)
+    @Column
     public String email;
+
+    @Column(nullable = false)
+    public String language;
+
+    @Column(name = "gradient_avatar")
+    public String gradientAvatar;
+
+    @Column(name = "avatar_url")
+    public String avatarUrl;
 
     @Column(name = "created_at", nullable = false)
     public LocalDateTime createdAt;

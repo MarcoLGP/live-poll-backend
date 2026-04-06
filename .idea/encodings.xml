@@ -5,6 +5,12 @@
     <file url="file://$PROJECT_DIR$/auth-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/livepoll-web/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/livepoll-web/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/notification-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/notification-service/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/poll-read-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/poll-read-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/poll-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/poll-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/realtime-service/src/main/java" charset="UTF-8" />

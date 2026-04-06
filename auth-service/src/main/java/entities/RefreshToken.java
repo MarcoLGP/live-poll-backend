@@ -1,9 +1,11 @@
 package entities;
 
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
-
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "refresh_token")
@@ -11,6 +13,7 @@ public class RefreshToken extends PanacheEntity {
 
     @ManyToOne
     @JoinColumn(name = "credential_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     public Credential credential;
 
     @Column(unique = true, nullable = false)
