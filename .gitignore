@@ -39,3 +39,4 @@ build/
 .DS_Store
 
 .env
+/auth-servicesrc/main/resources/privateKey.pem
