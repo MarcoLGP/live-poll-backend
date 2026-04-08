@@ -4,26 +4,27 @@ networks:
   livepoll-network:
     driver: bridge
 
-volumes:
-  rabbitmq_data:
-
 services:
-  stunnel:
-    image: stunnel/stunnel:latest
-    container_name: stunnel
+  # ─────────────────────────────────────────────
+  # RABBITMQ
+  # ─────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management
     restart: unless-stopped
-    volumes:
-      - ./stunnel.conf:/etc/stunnel/stunnel.conf:ro
-      - ./ca.crt:/etc/stunnel/ca.crt:ro
-    ports:
-      - "5672:5672"
     networks:
       - livepoll-network
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=livepoll
+      - RABBITMQ_DEFAULT_PASS=senha_livepoll
+      - RABBITMQ_DEFAULT_VHOST=/
     healthcheck:
-      test: [ "CMD", "stunnel", "-version" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: [ 'CMD', 'rabbitmq-diagnostics', 'ping' ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
   # ─────────────────────────────────────────────
   # CLOUDFLARE TUNNEL
   # ─────────────────────────────────────────────
